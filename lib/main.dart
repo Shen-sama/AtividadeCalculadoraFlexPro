@@ -80,12 +80,18 @@ class _CombustivelPageState extends State<CombustivelPage> {
               controller: alcoolController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: "Preço do Álcool"),
+              onChanged: (value) {
+                calcular();
+              },
             ),
             const SizedBox(height: 10),
             TextField(
               controller: gasolinaController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: "Preço da Gasolina"),
+              onChanged: (value) {
+                calcular();
+              },
             ),
             const SizedBox(height: 20),
 
