@@ -44,13 +44,14 @@ class _CombustivelPageState extends State<CombustivelPage> {
     double gasolina = double.tryParse(gasolinaTexto) ?? 0;
 
     if (alcool == 0 || gasolina == 0) {
+      setState(() {
+        mostrarResultado = false;
+      });
       return;
     }
 
     bool alcoolCompensa = alcool <= gasolina * 0.7;
-
     String combustivelEscolhido = alcoolCompensa ? "Álcool" : "Gasolina";
-
     double precoBase = alcoolCompensa ? alcool : gasolina;
 
     double desconto = niveisFidelidade.firstWhere(
@@ -65,52 +66,83 @@ class _CombustivelPageState extends State<CombustivelPage> {
     });
   }
 
+  InputDecoration _estiloCampoTexto(String rotulo, {String? prefixo}) {
+    return InputDecoration(
+      labelText: rotulo,
+      prefixText: prefixo,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.black12, width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text("Posto de Combustível"),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.blueAccent,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
               controller: alcoolController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Preço do Álcool"),
-              onChanged: (value) {
-                calcular();
-              },
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: _estiloCampoTexto("Preço do Álcool", prefixo: "R\$ "),
+              onChanged: (value) => calcular(),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 15),
             TextField(
               controller: gasolinaController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Preço da Gasolina"),
-              onChanged: (value) {
-                calcular();
-              },
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: _estiloCampoTexto(
+                "Preço da Gasolina",
+                prefixo: "R\$ ",
+              ),
+              onChanged: (value) => calcular(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             const Text(
               "Nível de Fidelidade",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               initialValue: nivelFidelidade,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+              decoration: _estiloCampoTexto("Selecione seu nível"),
+              icon: const Icon(
+                Icons.arrow_drop_down_circle,
+                color: Colors.blueAccent,
               ),
               items: niveisFidelidade.map((nivel) {
                 return DropdownMenuItem<String>(
                   value: nivel["nome"],
                   child: Text(
-                    "${nivel["nome"]} (${(nivel["desconto"] * 100).toInt()}% de desconto)",
+                    "${nivel["nome"]} (${(nivel["desconto"] * 100).toInt()}% off)",
+                    style: const TextStyle(fontSize: 16),
                   ),
                 );
               }).toList(),
@@ -122,33 +154,86 @@ class _CombustivelPageState extends State<CombustivelPage> {
               },
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
 
-            ElevatedButton(onPressed: calcular, child: const Text("Calcular")),
+            ElevatedButton(
+              onPressed: calcular,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 3,
+              ),
+              child: const Text(
+                "Calcular Vantagem",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
 
             const SizedBox(height: 30),
 
             if (mostrarResultado)
-              Column(
-                children: [
-                  Icon(
-                    resultado == "Álcool" ? Icons.oil_barrel : Icons.oil_barrel,
-                    color: resultado == "Álcool" ? Colors.green : Colors.orange,
-                    size: 60,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Melhor opção: $resultado",
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                      offset: Offset(0, 5),
                     ),
+                  ],
+                  border: Border.all(
+                    color: resultado == "Álcool" ? Colors.green : Colors.orange,
+                    width: 2.5,
                   ),
-                  Text(
-                    "Valor final com desconto: R\$ ${valorFinal.toStringAsFixed(2)}",
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                ],
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.local_gas_station_rounded,
+                      color: resultado == "Álcool"
+                          ? Colors.green
+                          : Colors.orange,
+                      size: 70,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Abasteça com $resultado",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: resultado == "Álcool"
+                            ? Colors.green[700]
+                            : Colors.orange[800],
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Divider(color: Colors.black12, thickness: 1.5),
+                    ),
+                    const Text(
+                      "Valor final com desconto:",
+                      style: TextStyle(fontSize: 15, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "R\$ ${valorFinal.toStringAsFixed(2)} / litro",
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
               ),
           ],
         ),
